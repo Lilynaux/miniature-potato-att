@@ -3,30 +3,41 @@ import subprocess
 import gradio as gr
 
 from downloader import download_audio
+from platform_detect import detect_platform, extract_url
 from transcriber import transcribe_audio, save_transcript
 
 
-def handle_bilibili_url(url: str, language: str):
+def handle_video_url(url: str, language: str):
     if not url or not url.strip():
-        return "Please paste a Bilibili URL.", ""
+        yield "Please paste a video URL.", "", "Idle."
+        return
 
     try:
-        audio_path = download_audio(url.strip())
+        yield "", "", "Detecting platform..."
 
-        text = transcribe_audio(
-            audio_path=audio_path,
-            language=language
-        )
+        clean_url = extract_url(url.strip())
+        platform = detect_platform(clean_url)
 
+        if platform == 'unknown':
+            yield "Unsupported platform. Supported: Bilibili, Douyin, YouTube, Mediasite.", "", "Failed."
+            return
+
+        yield "", "", f"Downloading audio ({platform})..."
+        audio_path = download_audio(clean_url, platform)
+
+        yield "", "", "Transcribing audio..."
+        text = transcribe_audio(audio_path=audio_path, language=language)
+
+        yield "", "", "Saving transcript..."
         output_path = save_transcript(audio_path, text)
 
-        return text, str(output_path)
+        yield text, str(output_path), "Completed."
 
-    except subprocess.CalledProcessError as e:
-        return f"Download failed:\n{e}", ""
+    except subprocess.CalledProcessError:
+        yield "Failed to download audio. Check the URL or your network connection.", "", "Failed."
 
     except Exception as e:
-        return f"Failed:\n{e}", ""
+        yield f"Failed to transcribe audio:\n{e}", "", "Failed."
 
 
 def handle_uploaded_audio(audio_file, language: str):
@@ -52,7 +63,7 @@ def handle_uploaded_audio(audio_file, language: str):
 with gr.Blocks(title="Audio Transcriber") as demo:
 
     gr.Markdown("# Audio Transcriber")
-    gr.Markdown("Bilibili URL / local audio → download → transcribe → save txt.")
+    gr.Markdown("Video URL / local audio → download → transcribe → save txt.")
 
     language = gr.Dropdown(
         choices=["zh", "en"],
@@ -60,10 +71,10 @@ with gr.Blocks(title="Audio Transcriber") as demo:
         label="Transcription Language"
     )
 
-    with gr.Tab("Bilibili URL"):
+    with gr.Tab("Video URL"):
         url_input = gr.Textbox(
-            label="Paste Bilibili URL",
-            placeholder="https://www.bilibili.com/video/..."
+            label="Paste Video URL",
+            placeholder="Bilibili / Douyin / YouTube / Mediasite"
         )
 
         url_btn = gr.Button(
@@ -83,6 +94,12 @@ with gr.Blocks(title="Audio Transcriber") as demo:
             variant="primary"
         )
 
+    status_display = gr.Textbox(
+        label="Status",
+        lines=1,
+        interactive=False
+    )
+
     transcript_output = gr.Textbox(
         label="Transcript",
         lines=25
@@ -94,9 +111,9 @@ with gr.Blocks(title="Audio Transcriber") as demo:
     )
 
     url_event = url_btn.click(
-        fn=handle_bilibili_url,
+        fn=handle_video_url,
         inputs=[url_input, language],
-        outputs=[transcript_output, output_path]
+        outputs=[transcript_output, output_path, status_display]
     )
 
     upload_event = upload_btn.click(
