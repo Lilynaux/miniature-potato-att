@@ -13,6 +13,10 @@ def _sanitize_stem(name: str) -> str:
 
 
 def download_audio(url: str, platform: str) -> Path:
+    if platform == 'douyin':
+        from douyin_playwright import download_douyin_audio
+        return download_douyin_audio(url)
+
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
     fallback_stem = f"{platform.capitalize()}_{timestamp}"
 
@@ -38,7 +42,7 @@ def download_audio(url: str, platform: str) -> Path:
     cmd.append(url)
 
     before = set(AUDIO_DIR.glob("*.mp3"))
-    subprocess.run(cmd, check=True)
+    result = subprocess.run(cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
     after = set(AUDIO_DIR.glob("*.mp3"))
 
     new_files = after - before

@@ -2,3 +2,4 @@ gradio
 faster-whisper
 yt-dlp
 requests
+playwright

@@ -33,8 +33,9 @@ def handle_video_url(url: str, language: str):
 
         yield text, str(output_path), "Completed."
 
-    except subprocess.CalledProcessError:
-        yield "Failed to download audio. Check the URL or your network connection.", "", "Failed."
+    except subprocess.CalledProcessError as e:
+        detail = e.stdout.strip() if e.stdout else "Check the URL or your network connection."
+        yield f"Failed to download audio:\n\n{detail}", "", "Failed."
 
     except Exception as e:
         yield f"Failed to transcribe audio:\n{e}", "", "Failed."
