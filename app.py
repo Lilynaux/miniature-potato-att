@@ -5,6 +5,7 @@ import gradio as gr
 from core.downloader import download_audio
 from core.platform_detect import detect_platform, extract_url
 from core.transcriber import transcribe_audio, save_transcript
+from core.ai_notes import generate_notes, save_notes, estimate_tokens
 
 
 def handle_video_url(url: str, language: str):
@@ -61,16 +62,43 @@ def handle_uploaded_audio(audio_file, language: str):
         return f"Failed:\n{e}", ""
 
 
+def handle_generate_notes(transcript: str, provider: str, txt_path: str):
+    if not transcript or not transcript.strip():
+        yield "", "", "No transcript to process."
+        return
+
+    try:
+        tokens = estimate_tokens(transcript)
+        yield "", "", f"Generating AI notes ({provider}, ~{tokens} tokens)..."
+
+        notes = generate_notes(transcript, provider)
+
+        notes_path = ""
+        if txt_path:
+            notes_path = str(save_notes(txt_path, notes))
+
+        yield notes, notes_path, "AI notes generated."
+
+    except Exception as e:
+        yield "", "", f"Failed to generate notes: {e}"
+
+
 with gr.Blocks(title="Audio Transcriber") as demo:
 
     gr.Markdown("# Audio Transcriber")
-    gr.Markdown("Video URL / local audio → download → transcribe → save txt.")
+    gr.Markdown("Video URL / local audio → download → transcribe → AI notes.")
 
-    language = gr.Dropdown(
-        choices=["zh", "en"],
-        value="zh",
-        label="Transcription Language"
-    )
+    with gr.Row():
+        language = gr.Dropdown(
+            choices=["zh", "en"],
+            value="zh",
+            label="Transcription Language"
+        )
+        ai_provider = gr.Dropdown(
+            choices=["Gemini", "GPT"],
+            value="Gemini",
+            label="AI Provider"
+        )
 
     with gr.Tab("Video URL"):
         url_input = gr.Textbox(
@@ -103,11 +131,28 @@ with gr.Blocks(title="Audio Transcriber") as demo:
 
     transcript_output = gr.Textbox(
         label="Transcript",
-        lines=25
+        lines=20
     )
 
     output_path = gr.Textbox(
         label="Saved TXT Path",
+        lines=1
+    )
+
+    gr.Markdown("---")
+
+    notes_btn = gr.Button(
+        "Generate AI Notes",
+        variant="secondary"
+    )
+
+    notes_output = gr.Textbox(
+        label="AI Notes",
+        lines=20
+    )
+
+    notes_path = gr.Textbox(
+        label="Saved Notes Path",
         lines=1
     )
 
@@ -123,13 +168,19 @@ with gr.Blocks(title="Audio Transcriber") as demo:
         outputs=[transcript_output, output_path]
     )
 
+    notes_event = notes_btn.click(
+        fn=handle_generate_notes,
+        inputs=[transcript_output, ai_provider, output_path],
+        outputs=[notes_output, notes_path, status_display]
+    )
+
     stop_btn = gr.Button("Stop", variant="stop")
 
     stop_btn.click(
         fn=None,
         inputs=None,
         outputs=None,
-        cancels=[url_event, upload_event]
+        cancels=[url_event, upload_event, notes_event]
     )
 
 

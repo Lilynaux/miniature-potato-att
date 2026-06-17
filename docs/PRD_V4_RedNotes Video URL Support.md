@@ -1,4 +1,4 @@
-PRD-003.1 Xiaohongshu (RED) Platform Support
+PRD-004 Xiaohongshu (RED) Platform Support
 
 Background
 
