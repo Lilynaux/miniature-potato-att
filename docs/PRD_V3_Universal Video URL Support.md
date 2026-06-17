@@ -21,7 +21,6 @@ Supported platforms should include:
 Future extensibility should be preserved for:
 
 - TikTok
-- Xiaohongshu
 - Podcast RSS
 - Spotify Podcasts
 
