@@ -2,9 +2,9 @@ from pathlib import Path
 import subprocess
 import gradio as gr
 
-from downloader import download_audio
-from platform_detect import detect_platform, extract_url
-from transcriber import transcribe_audio, save_transcript
+from core.downloader import download_audio
+from core.platform_detect import detect_platform, extract_url
+from core.transcriber import transcribe_audio, save_transcript
 
 
 def handle_video_url(url: str, language: str):
@@ -19,7 +19,7 @@ def handle_video_url(url: str, language: str):
         platform = detect_platform(clean_url)
 
         if platform == 'unknown':
-            yield "Unsupported platform. Supported: Bilibili, Douyin, YouTube, Mediasite.", "", "Failed."
+            yield "Unsupported platform. Supported: Bilibili, Douyin, Xiaohongshu, YouTube, Mediasite.", "", "Failed."
             return
 
         yield "", "", f"Downloading audio ({platform})..."
@@ -75,7 +75,7 @@ with gr.Blocks(title="Audio Transcriber") as demo:
     with gr.Tab("Video URL"):
         url_input = gr.Textbox(
             label="Paste Video URL",
-            placeholder="Bilibili / Douyin / YouTube / Mediasite"
+            placeholder="Bilibili / Douyin / Xiaohongshu / YouTube / Mediasite"
         )
 
         url_btn = gr.Button(

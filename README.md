@@ -1,37 +1,41 @@
 # AudioToText
 
-A local Gradio tool for transcribing video audio from multiple platforms using faster-whisper.
+A local Gradio tool that downloads video audio from multiple platforms and transcribes it using faster-whisper.
 
-Paste any supported video URL — the tool automatically detects the platform, downloads the audio, transcribes it, and saves a transcript to your Desktop.
+Paste a video URL — the tool detects the platform, downloads audio, transcribes it, and saves the transcript to your Desktop. No cloud APIs, everything runs locally.
 
 ## Supported Platforms
 
-| Platform | Example URL |
-| -------- | ----------- |
-| Bilibili | `https://www.bilibili.com/video/...` or `https://b23.tv/...` |
-| Douyin | `https://v.douyin.com/...` (share text also accepted) |
-| YouTube | `https://www.youtube.com/watch?v=...` or `https://youtu.be/...` |
-| Mediasite | `https://mediasite.*.ac.uk/...` |
+| Platform | URL Patterns |
+| -------- | ------------ |
+| Bilibili | `bilibili.com/video/...` `b23.tv/...` |
+| Douyin | `v.douyin.com/...` (share text supported) |
+| Xiaohongshu | `xiaohongshu.com/explore/...` `xiaohongshu.com/discovery/...` `xhslink.com/...` |
+| YouTube | `youtube.com/watch?v=...` `youtu.be/...` |
+| Mediasite | `mediasite.*.ac.uk/...` |
 
-Douyin share messages are supported — paste the full share text and the URL is extracted automatically:
+Share text from Douyin and Xiaohongshu is supported — paste the full share message and the URL is extracted automatically.
+
+## Project Structure
 
 ```text
-x.xx 复制打开抖音，看看【xxx的作品】 https://v.douyin.com/xxxxxx/
+├── app.py                  # Gradio web UI entry point
+├── core/                   # Business logic package
+│   ├── config.py           # Output directory configuration
+│   ├── platform_detect.py  # URL extraction and platform detection
+│   ├── downloader.py       # Audio download router (yt-dlp)
+│   ├── douyin.py           # Douyin headless browser download
+│   ├── xiaohongshu.py      # Xiaohongshu headless browser download
+│   └── transcriber.py      # Whisper transcription and transcript saving
+├── scripts/
+│   └── StartTranscriber.command  # macOS double-click launcher
+├── docs/                   # Product requirement documents
+└── requirements.txt
 ```
 
-## Features
-
-- Paste a video URL from any supported platform
-- Auto-detects platform — no manual selection needed
-- Douyin: headless browser download (bypasses bot detection)
-- Other platforms: yt-dlp with Chrome cookie pass-through
-- Transcribe with faster-whisper (runs fully local, CPU or GPU)
-- Upload local audio files directly
-- Live status display: Detecting → Downloading → Transcribing → Saving
-- Clean file naming: uses video title, falls back to `Platform_YYYYMMDD_HHMMSS`
-- Saves transcripts to `~/Desktop/AudioTranscripts/`
-
 ## Installation
+
+Requires Python 3.10+, ffmpeg, and the conda `Tools` environment (or any env with the dependencies below).
 
 ```bash
 pip install -r requirements.txt
@@ -45,20 +49,25 @@ brew install ffmpeg
 python app.py
 ```
 
-The Gradio interface opens in your browser automatically.
+The Gradio interface opens in your browser at `http://127.0.0.1:7860`.
 
-**Video URL tab** — paste any supported URL or Douyin share text, select the transcription language, and click Download + Transcribe.
+On macOS, you can also double-click `scripts/StartTranscriber.command` to launch directly.
 
-**Upload Audio tab** — upload a local `.mp3`, `.wav`, `.m4a`, `.mp4`, or `.aac` file for direct transcription.
+**Video URL tab** — paste a supported URL (or share text), select language, click Download + Transcribe.
+
+**Upload Audio tab** — upload a local `.mp3` / `.wav` / `.m4a` / `.mp4` / `.aac` file for transcription.
 
 ## Output
 
-- Audio saved to `~/Desktop/AudioDownloads/`
-- Transcripts saved to `~/Desktop/AudioTranscripts/`
+| Type | Location |
+| ---- | -------- |
+| Audio | `~/Desktop/AudioDownloads/` |
+| Transcripts | `~/Desktop/AudioTranscripts/` |
 
-## Notes
+Files are named after the video title when available, otherwise `Platform_YYYYMMDD_HHMMSS`.
 
-- **Douyin** uses a headless Chromium browser (Playwright) to bypass bot detection — no login required.
-- **Bilibili / YouTube / Mediasite** use yt-dlp with Chrome cookies. For login-restricted videos, make sure you are signed in to the site in Chrome before running.
-- Transcription runs on CPU by default. To use GPU, change `device="cpu"` to `device="cuda"` in [transcriber.py](transcriber.py).
-- Unsupported URLs return a graceful error — the app does not crash.
+## Platform Notes
+
+- **Douyin / Xiaohongshu** use headless Chromium (Playwright) to bypass bot detection. No login required for public content.
+- **Bilibili / YouTube / Mediasite** use yt-dlp with Chrome cookies. Sign in to the site in Chrome first for login-restricted videos.
+- Transcription runs on CPU (`int8`) by default. For GPU, change `device="cpu"` to `device="cuda"` in `core/transcriber.py`.

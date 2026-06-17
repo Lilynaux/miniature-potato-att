@@ -4,8 +4,8 @@ from datetime import datetime
 
 from playwright.sync_api import sync_playwright
 
-from config import AUDIO_DIR
-from downloader import _sanitize_stem
+from core.config import AUDIO_DIR
+from core.downloader import _sanitize_stem
 
 
 def download_douyin_audio(url: str) -> Path:

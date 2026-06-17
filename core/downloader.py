@@ -3,7 +3,7 @@ import re
 import subprocess
 from datetime import datetime
 
-from config import AUDIO_DIR
+from core.config import AUDIO_DIR
 
 
 def _sanitize_stem(name: str) -> str:
@@ -14,8 +14,12 @@ def _sanitize_stem(name: str) -> str:
 
 def download_audio(url: str, platform: str) -> Path:
     if platform == 'douyin':
-        from douyin_playwright import download_douyin_audio
+        from core.douyin import download_douyin_audio
         return download_douyin_audio(url)
+
+    if platform == 'xiaohongshu':
+        from core.xiaohongshu import download_xiaohongshu_audio
+        return download_xiaohongshu_audio(url)
 
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
     fallback_stem = f"{platform.capitalize()}_{timestamp}"

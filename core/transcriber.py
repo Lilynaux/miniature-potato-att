@@ -1,7 +1,7 @@
 from pathlib import Path
 from faster_whisper import WhisperModel
 
-from config import OUTPUT_DIR
+from core.config import OUTPUT_DIR
 
 
 model = WhisperModel(
