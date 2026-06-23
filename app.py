@@ -20,7 +20,7 @@ def handle_video_url(url: str, language: str):
         platform = detect_platform(clean_url)
 
         if platform == 'unknown':
-            yield "Unsupported platform. Supported: Bilibili, Douyin, Xiaohongshu, YouTube, Mediasite.", "", "Failed."
+            yield "Unsupported platform. Supported: Bilibili, Douyin, Xiaohongshu, YouTube, Mediasite, Apple Podcasts, Podcast RSS.", "", "Failed."
             return
 
         yield "", "", f"Downloading audio ({platform})..."
@@ -86,7 +86,7 @@ def handle_generate_notes(transcript: str, provider: str, txt_path: str):
 with gr.Blocks(title="Audio Transcriber") as demo:
 
     gr.Markdown("# Audio Transcriber")
-    gr.Markdown("Video URL / local audio → download → transcribe → AI notes.")
+    gr.Markdown("Video / podcast URL or local audio → download → transcribe → AI notes.")
 
     with gr.Row():
         language = gr.Dropdown(
@@ -100,10 +100,10 @@ with gr.Blocks(title="Audio Transcriber") as demo:
             label="AI Provider"
         )
 
-    with gr.Tab("Video URL"):
+    with gr.Tab("URL"):
         url_input = gr.Textbox(
-            label="Paste Video URL",
-            placeholder="Bilibili / Douyin / Xiaohongshu / YouTube / Mediasite"
+            label="Paste URL",
+            placeholder="Bilibili / Douyin / Xiaohongshu / YouTube / Mediasite / Apple Podcasts / Podcast RSS"
         )
 
         url_btn = gr.Button(
@@ -189,5 +189,6 @@ if __name__ == "__main__":
 
     demo.launch(
         server_name="127.0.0.1",
-        inbrowser=True
+        inbrowser=True,
+        share=True
     )

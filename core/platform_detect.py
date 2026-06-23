@@ -11,8 +11,12 @@ def extract_url(text: str) -> str:
 
 
 def detect_platform(url: str) -> str:
-    """Detect video platform from URL. Returns: bilibili | douyin | xiaohongshu | youtube | mediasite | unknown"""
+    """Detect media platform from URL."""
     lower = url.lower()
+    if 'podcasts.apple.com' in lower:
+        return 'apple_podcast'
+    if 'feeds.' in lower or 'rss.' in lower or '/rss' in lower:
+        return 'podcast_rss'
     if 'bilibili.com' in lower or 'b23.tv' in lower:
         return 'bilibili'
     if 'douyin.com' in lower:

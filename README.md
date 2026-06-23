@@ -2,7 +2,9 @@
 
 A local Gradio tool that downloads video audio from multiple platforms, transcribes it using faster-whisper, and optionally generates AI-structured Markdown notes.
 
-Paste a video URL — the tool detects the platform, downloads audio, transcribes it, and saves the transcript to your Desktop. Then optionally click **Generate AI Notes** to turn the raw transcript into structured knowledge.
+Paste a video or podcast URL — the tool detects the platform, downloads audio, transcribes it, and saves the transcript to your Desktop. Then optionally click **Generate AI Notes** to turn the raw transcript into structured knowledge.
+
+![AudioToText](image.png)
 
 ## Supported Platforms
 
@@ -13,6 +15,8 @@ Paste a video URL — the tool detects the platform, downloads audio, transcribe
 | Xiaohongshu | `xiaohongshu.com/explore/...` `xiaohongshu.com/discovery/...` `xhslink.com/...` |
 | YouTube | `youtube.com/watch?v=...` `youtu.be/...` |
 | Mediasite | `mediasite.*.ac.uk/...` |
+| Apple Podcasts | `podcasts.apple.com/...` episode or show URLs |
+| Podcast RSS | `feeds.*` `rss.*` podcast RSS feeds |
 
 Share text from Douyin and Xiaohongshu is supported — paste the full share message and the URL is extracted automatically.
 
@@ -24,6 +28,7 @@ Share text from Douyin and Xiaohongshu is supported — paste the full share mes
 │   ├── config.py           # Directory config and env loading
 │   ├── platform_detect.py  # URL extraction and platform detection
 │   ├── downloader.py       # Audio download router (yt-dlp)
+│   ├── podcast.py          # Apple Podcasts / RSS feed resolver and downloader
 │   ├── douyin.py           # Douyin headless browser download
 │   ├── xiaohongshu.py      # Xiaohongshu headless browser download
 │   ├── transcriber.py      # Whisper transcription and transcript saving
@@ -70,7 +75,7 @@ The Gradio interface opens in your browser at `http://127.0.0.1:7860`.
 
 On macOS, you can also double-click `scripts/StartTranscriber.command` to launch directly.
 
-**Video URL tab** — paste a supported URL (or share text), select language, click Download + Transcribe.
+**URL tab** — paste a supported URL (or share text), select language, click Download + Transcribe.
 
 **Upload Audio tab** — upload a local `.mp3` / `.wav` / `.m4a` / `.mp4` / `.aac` file for transcription.
 
@@ -90,5 +95,7 @@ Files are named after the video title when available, otherwise `Platform_YYYYMM
 
 - **Douyin / Xiaohongshu** use headless Chromium (Playwright) to bypass bot detection. No login required for public content.
 - **Bilibili / YouTube / Mediasite** use yt-dlp with Chrome cookies. Sign in to the site in Chrome first for login-restricted videos.
+- **Apple Podcasts / Podcast RSS** resolve the podcast RSS feed, extract the episode audio enclosure, and convert it to MP3 with ffmpeg.
+- Audio longer than 30 minutes is split into smaller MP3 chunks for transcription, then merged back into one transcript.
 - Transcription runs on CPU (`int8`) by default. For GPU, change `device="cpu"` to `device="cuda"` in `core/transcriber.py`.
 - AI Notes uses Gemini by default. Long transcripts are automatically chunked and merged.

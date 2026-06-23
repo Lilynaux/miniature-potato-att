@@ -13,6 +13,10 @@ def _sanitize_stem(name: str) -> str:
 
 
 def download_audio(url: str, platform: str) -> Path:
+    if platform in ('apple_podcast', 'podcast_rss'):
+        from core.podcast import download_podcast_audio
+        return download_podcast_audio(url, platform)
+
     if platform == 'douyin':
         from core.douyin import download_douyin_audio
         return download_douyin_audio(url)
